@@ -1,0 +1,19 @@
+{
+  "name": "iacmparaiso.org.br",
+  "version": "1.0.0",
+  "description": "Site oficial da Igreja Aliança Cristã e Missionária do Paraíso.",
+  "main": "assets/js/site.js",
+  "scripts": {
+    "events:sync": "node scripts/sync-events-data.js",
+    "serve": "python3 -m http.server 4173",
+    "playwright:install": "playwright install chromium",
+    "screenshots": "npm run events:sync && node scripts/capture-previews.js",
+    "test": "npm run events:sync && node tests/layout.spec.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

@@ -1,179 +1,188 @@
 # Igreja Aliança Cristã e Missionária do Paraíso
 
-Site oficial da **Igreja Aliança Cristã e Missionária do Paraíso** (em construção).
-
----
+Site oficial da **IACM Paraíso**, com publicação estática e manutenção simples.
 
 ## 1. Visão geral
 
-O site da IACM Paraíso tem as seguintes características:
+Este repositório contém o site institucional da igreja. O projeto foi mantido como site estático para priorizar:
 
-- **estático**, com carregamento rápido e baixo custo de hospedagem;
-- **simples de publicar**, com suporte a GitHub Pages;
-- **fácil de manter**, mesmo sem backend;
-- **moderno e acolhedor**, com visual leve, alegre e respeitoso;
-- **alinhado à identidade da igreja**, valorizando o logotipo, as cores institucionais e referências visuais discretas à cultura japonesa.
+- carregamento rápido;
+- hospedagem simples;
+- baixo custo operacional;
+- atualização direta de textos e imagens;
+- compatibilidade com GitHub Pages;
+- abertura local simples inclusive com `file://`.
 
-### Informações principais da igreja
+Informações institucionais principais:
 
-**Culto:** todos os domingos às **17h00**  
-**Local:** Associação da Província de Kagawa  
-Rua Itaipu, 422  
-(próximo da estação de metrô Praça da Árvore)  
-Bairro Mirandópolis  
-São Paulo - SP
-
----
+- **Culto:** domingos às **17h00**
+- **Endereço:** Rua Itaipu, 422, Mirandópolis, São Paulo-SP
+- **Referência:** próximo à estação de metrô Praça da Árvore
 
 ## 2. Público deste documento
 
-Este README é destinado a:
+Este README foi escrito para:
 
-- equipe de comunicação da igreja;
-- responsáveis por atualizar textos, fotos e horários;
-- voluntários que publicam o site;
-- mantenedores técnicos do repositório.
-
----
+- equipe de comunicação;
+- voluntários que atualizam o site;
+- mantenedores técnicos do repositório;
+- agentes locais de automação e validação visual.
 
 ## 3. Estrutura do projeto
 
 ```text
 .
 ├── index.html
+├── styles.css
+├── favicon.ico
+├── apple-touch-icon.png
 ├── assets/
-│   ├── fachada-kagawa.jpeg
-│   ├── iacm-logo.png
-├── style.css
-├── script.js
+│   ├── logo/
+│   ├── js/
+│   │   ├── events-data.js
+│   │   └── site.js
+│   └── painel.jpeg
+├── events/
+├── archive/
+├── .codex/
+├── package.json
+├── package-lock.json
+├── site.webmanifest
+├── robots.txt
+├── sitemap.xml
+├── llms.txt
 └── README.md
 ```
 
-### Finalidade de cada parte
+Finalidade de cada parte:
 
 - `index.html`: página principal do site.
-- `assets/`: imagens, ícones, logo e fotos institucionais.
-- `style.css`: estilos visuais do site.
-- `script.js`: interações visuais e animações leves.
-- `README.md`: documentação principal do projeto.
+- `styles.css`: estilos visuais e regras de responsividade.
+- `favicon.ico`: favicon raiz para compatibilidade ampla com navegadores e ferramentas.
+- `apple-touch-icon.png`: ícone raiz usado por dispositivos Apple ao salvar o site na tela inicial.
+- `assets/`: arquivos estáticos do site.
+- `assets/logo/`: logo principal e ícones PNG usados por navegador e manifesto web.
+- `assets/js/events-data.js`: fonte única de verdade dos eventos exibidos no site.
+- `assets/js/site.js`: interações leves executadas no navegador, inclusive a renderização da seção de eventos.
+- `assets/painel.jpeg`: arte principal exibida no topo quando desejado.
+- `events/`: imagens dos eventos ativos exibidos no site.
+- `archive/`: artes de eventos encerrados, mantidas apenas para histórico local.
+- `.codex/`: artefatos locais de apoio, como screenshots, arquivos temporários e logs.
+- `package.json`: metadados do projeto e dependência local do Playwright.
+- `site.webmanifest`, `robots.txt`, `sitemap.xml`, `llms.txt`: arquivos auxiliares de navegador, SEO e descoberta automatizada.
 
----
+## 4. Execução local
 
-## 5. Como executar localmente
+O site pode ser executado localmente de duas formas simples.
 
-Como o site é estático, é possível abrir o `index.html` diretamente no navegador.
+Abrindo o arquivo diretamente no navegador:
 
----
+```text
+file:///caminho/para/o/projeto/index.html
+```
 
-## 6. Como atualizar o conteúdo
+Servidor HTTP direto:
 
-As mudanças mais comuns no site costumam ser estas:
+```bash
+python3 -m http.server 4173
+```
 
-### Atualizar horário ou endereço
+Script do projeto:
 
-Edite o conteúdo correspondente no arquivo principal da página, normalmente `index.html`.
+```bash
+npm run serve
+```
 
-Revise sempre:
+Se usar servidor local, acessar:
 
-- dia e horário do culto;
+```text
+http://127.0.0.1:4173
+```
+
+Observação:
+
+- o site foi ajustado para funcionar tanto com servidor local quanto abrindo `index.html` diretamente;
+- isso é possível porque os eventos são carregados por `assets/js/events-data.js`, sem depender de `fetch`.
+
+## 5. Atualização de conteúdo
+
+As atualizações mais comuns são:
+
+### Horário, endereço e textos institucionais
+
+Editar diretamente em `index.html`.
+
+Antes de publicar, revisar:
+
+- horário do culto;
 - endereço completo;
 - referência de localização;
-- link do mapa, quando existir.
+- links externos;
+- consistência da linguagem institucional.
 
-### Atualizar imagens
+### Imagens institucionais
 
-Coloque os arquivos novos em `assets/` e substitua as referências no HTML, quando necessário.
+Adicionar ou substituir arquivos em `assets/`.
 
 Boas práticas:
 
 - preferir imagens otimizadas para web;
-- manter nomes de arquivo claros;
+- usar nomes de arquivo claros;
 - evitar arquivos excessivamente pesados;
-- preservar boa qualidade em fotos de fachada, eventos e logo.
+- preservar boa qualidade para logo, painel e imagens principais.
 
-### Atualizar redes sociais
+### Links externos
 
-Quando houver links para Instagram, Facebook, YouTube ou WhatsApp, revise se:
+Ao revisar links para mapa ou redes sociais, confirmar:
 
-- o link está correto;
-- o perfil ainda está ativo;
-- o texto do botão corresponde ao destino real.
+- destino correto;
+- texto coerente com o destino;
+- funcionamento em desktop e celular.
 
-### Atualizar textos institucionais
+## 6. Diretrizes editoriais
 
-Ao editar textos da igreja, manter:
+O conteúdo do site deve manter:
 
 - tom acolhedor;
 - linguagem clara;
 - reverência e simplicidade;
-- consistência com a identidade da IACM Paraíso.
+- coerência com a identidade da igreja.
 
----
+Visualmente, o site deve valorizar:
 
-## 7. Diretrizes de conteúdo
+- o logo oficial;
+- as cores institucionais;
+- uma estética limpa e respeitosa;
+- boa legibilidade em telas pequenas e grandes.
 
-### Identidade visual
+## 7. Responsividade e acessibilidade
 
-O site deve valorizar:
+Toda alteração relevante deve ser validada em:
 
-- o **logo oficial** da igreja;
-- cores harmonizadas com o logo;
-- sensação de alegria, energia e acolhimento;
-- efeitos visuais sutis, sem exagero;
-- acessibilidade para público amplo e irrestrito.
+- celular;
+- tablet;
+- notebook;
+- desktop.
 
-### Referência cultural
+Também é recomendável verificar:
 
-É aceitável usar referências visuais discretas ligadas à cultura japonesa, desde que:
+- contraste entre texto e fundo;
+- tamanho legível de fontes;
+- botões fáceis de tocar no celular;
+- presença de textos alternativos em imagens importantes, quando aplicável.
 
-- não descaracterizem a identidade cristã da igreja;
-- sejam elegantes e equilibradas;
-- funcionem como apoio visual, e não como tema dominante.
+## 8. Publicação
 
-### Linguagem recomendada
-
-Evitar excesso de texto, linguagem técnica ou termos pouco naturais para visitantes novos.
-
----
-
-## 8. Processo recomendado de publicação
-
-### Fluxo básico
+Fluxo básico de publicação:
 
 1. Fazer as alterações localmente.
-2. Testar no navegador.
+2. Testar visualmente o site.
 3. Revisar textos, links e imagens.
-4. Confirmar se o site funciona bem em celular e desktop.
-5. Publicar no repositório principal.
-6. Validar a versão publicada no GitHub Pages.
+4. Fazer commit.
+5. Enviar para o repositório.
+6. Validar a versão publicada.
 
-### Checklist antes de publicar
-
-Verificar:
-
-- [ ] horário do culto correto;
-- [ ] endereço correto;
-- [ ] links externos funcionando;
-- [ ] imagens carregando corretamente;
-- [ ] logo em boa resolução;
-- [ ] layout responsivo no celular;
-- [ ] ausência de erros visíveis no JavaScript;
-- [ ] grafia revisada em português.
-
----
-
-## 9. Publicação no GitHub Pages
-
-Como o site é estático, o fluxo de publicação costuma ser simples.
-
-### Modelo recomendado
-
-- manter o código em um repositório Git;
-- usar a branch definida como principal de publicação;
-- publicar via GitHub Pages;
-- validar a URL final após cada atualização.
-
-### Exemplo de fluxo com Git
+Exemplo:
 
 ```bash
 git add .
@@ -181,168 +190,281 @@ git commit -m "Atualiza conteúdo do site"
 git push
 ```
 
-Depois disso, aguarde a atualização do GitHub Pages e revise a versão online.
+Checklist antes de publicar:
 
-> Em produção, a equipe deve considerar a branch publicada como ambiente oficial e evitar mudanças sem revisão mínima.
+- [ ] horário do culto correto;
+- [ ] endereço correto;
+- [ ] imagens carregando corretamente;
+- [ ] links externos funcionando;
+- [ ] layout responsivo revisado;
+- [ ] grafia revisada em português;
+- [ ] versão publicada conferida após o push.
 
----
+## 9. Playwright para validação visual
 
-## 10. Boas práticas operacionais
+Este repositório usa **Playwright local** para revisão visual assistida.
 
-### 10.1 Controle de mudanças
+### Situação atual do projeto
 
-Sempre que possível:
+O repositório já possui:
 
-- registrar o que foi alterado;
-- usar mensagens de commit claras;
-- evitar mudanças grandes sem teste prévio;
-- publicar uma alteração por vez quando o prazo for apertado.
+- `package.json`;
+- `package-lock.json`;
+- `playwright` em `devDependencies`.
 
-### 10.2 Gestão de imagens
+Isso permite usar Playwright localmente com `npx` e também usar scripts Node locais com `require('playwright')` ou `import { chromium } from 'playwright'`.
 
-- usar formatos apropriados para web;
-- manter cópia original dos arquivos em local seguro;
-- não sobrescrever acidentalmente o logo oficial sem backup;
-- revisar direitos de uso de fotos antes de publicar.
+### Instalação inicial
 
-### 10.3 Revisão de conteúdo
+Ao clonar o repositório em uma máquina nova:
 
-Antes de subir para produção, revisar:
+```bash
+npm install
+npx playwright install chromium
+```
 
-- ortografia;
-- nomes próprios;
-- datas e horários;
-- consistência ministerial;
-- coerência visual.
+Observações:
 
-### 10.4 Continuidade
+- `npm install` instala a dependência JavaScript local em `node_modules/`;
+- `npx playwright install chromium` instala o navegador gerenciado pelo Playwright;
+- os binários do navegador ficam normalmente em `~/.cache/ms-playwright/`;
+- `node_modules/` é local e está ignorado no Git.
 
-Como boa prática institucional, recomenda-se que ao menos duas pessoas saibam:
+### Scripts disponíveis
+
+```bash
+npm run serve
+npm run playwright:install
+npm run screenshots
+```
+
+### Captura de screenshots
+
+Desktop:
+
+```bash
+npx playwright screenshot --device="Desktop Chrome HiDPI" http://127.0.0.1:4173 .codex/screenshots/screenshot-home.png
+```
+
+Celular:
+
+```bash
+npx playwright screenshot --device="Pixel 7" http://127.0.0.1:4173 .codex/screenshots/screenshot-mobile.png
+```
+
+Regra operacional:
+
+- toda alteração visual ou de layout deve gerar screenshots novos antes da conclusão da tarefa;
+- salvar as capturas em `.codex/screenshots/`;
+- considerar a geração de screenshots como validação obrigatória, não opcional;
+- capturar a página ou a seção realmente impactada pela alteração, não apenas o topo da home;
+- em site de página única, rolar até a seção afetada e registrar essa área também;
+- revisar as screenshots geradas para confirmar que a alteração ficou correta e com boa qualidade visual.
+
+### Fluxo recomendado com LLM
+
+1. Editar HTML, CSS ou JavaScript.
+2. Subir o servidor local quando necessário.
+3. Gerar screenshot com Playwright.
+4. Revisar o resultado visual.
+5. Repetir até o layout ficar correto.
+
+Boas práticas:
+
+- validar em desktop e celular quando a mudança afetar layout;
+- não confiar apenas em cálculo teórico de altura e largura;
+- usar screenshots de viewport quando a dúvida for “o que aparece na primeira tela”;
+- usar screenshot full page quando a dúvida for “o que existe no documento inteiro”.
+
+## 10. Uso da pasta `.codex/`
+
+Esta pasta é reservada para uso local do agente e apoio operacional.
+
+Estrutura sugerida:
+
+- `.codex/screenshots/`: capturas temporárias de validação;
+- `.codex/tmp/`: arquivos temporários de teste e scripts auxiliares;
+- `.codex/logs/`: logs locais, quando necessários.
+
+Regras operacionais:
+
+- `.codex/` não faz parte do conteúdo do site;
+- screenshots e artefatos temporários devem ficar em `.codex/`, não na raiz do projeto;
+- recomenda-se apagar artefatos antigos periodicamente.
+
+## 11. Gestão de eventos
+
+O site possui uma seção própria para eventos.
+
+Pastas e arquivos relacionados:
+
+- `assets/js/events-data.js`: fonte única de verdade dos eventos ativos;
+- `events/`: imagens dos eventos ativos que devem aparecer no site;
+- `archive/`: eventos encerrados, mantidos apenas para histórico local.
+
+### Como o site trata os eventos
+
+Cada item listado em `assets/js/events-data.js` representa um item da seção `Eventos`.
+
+Cada item deve informar:
+
+- `file`: nome do arquivo presente em `events/`;
+- `title`: título que será exibido como heading do evento no site.
+
+Exemplo:
+
+```js
+window.EVENTS_DATA = Object.freeze([
+  {
+    file: 'event1-o-reino-dos-ceus-2026.jpeg',
+    title: 'O Reino dos Céus'
+  },
+  {
+    file: 'event2-o-reino-dos-ceus-parte-2.jpeg',
+    title: 'O Reino dos Céus II'
+  }
+]);
+```
+
+Regra de ordenação:
+
+- o site exibe os eventos exatamente na sequência definida em `assets/js/events-data.js`;
+- a primeira entrada vira o primeiro heading e a primeira imagem;
+- a segunda entrada vira o segundo heading e a segunda imagem;
+- a ordem alfabética dos arquivos não é usada para montagem da seção.
+
+Fluxo técnico:
+
+- `assets/js/events-data.js` é a única fonte de verdade dos eventos;
+- `assets/js/site.js` lê esse arquivo diretamente no navegador;
+- isso mantém compatibilidade com GitHub Pages e também com abertura por `file://`.
+
+Comportamento sem eventos:
+
+- se `window.EVENTS_DATA` estiver vazio, o botão `Eventos` não deve aparecer no topo;
+- a seção inteira de eventos deve ficar oculta;
+- o site não deve exibir a mensagem “Nenhum evento disponível no momento.” na interface pública.
+
+### Fluxo recomendado
+
+Para publicar um novo evento:
+
+1. preparar a arte final;
+2. salvar o arquivo em `events/`;
+3. adicionar a entrada correspondente em `assets/js/events-data.js`;
+4. revisar o site localmente;
+5. publicar após validação.
+
+Quando o evento terminar:
+
+1. remover a entrada correspondente de `assets/js/events-data.js`;
+2. remover a arte de `events/`;
+3. mover o arquivo para `archive/`;
+4. revisar o site novamente;
+5. publicar a atualização.
+
+Boas práticas:
+
+- usar nomes de arquivo claros;
+- preferir imagens otimizadas para web;
+- manter `assets/js/events-data.js` consistente com os arquivos realmente existentes em `events/`;
+- manter apenas eventos realmente ativos em `events/`;
+- remover do arquivo qualquer evento cuja imagem tenha sido apagada.
+
+### Regra prática importante
+
+Nunca deixe um item em `assets/js/events-data.js` apontando para uma imagem que já não existe em `events/`.
+
+Se isso acontecer:
+
+- o título poderá ser criado primeiro;
+- a imagem falhará ao carregar;
+- o navegador removerá esse item da lista após detectar erro de imagem.
+
+Mesmo com essa proteção, a prática correta continua sendo manter os dados sincronizados manualmente.
+
+## 12. Uso do painel principal
+
+O topo do site pode usar:
+
+- `assets/painel.jpeg`
+
+Essa imagem funciona como peça principal de comunicação quando há campanha ativa.
+
+Exemplos de uso:
+
+- aniversário da igreja;
+- conferências;
+- cultos temáticos;
+- convites especiais.
+
+### Quando usar
+
+Usar `painel.jpeg` quando a igreja quiser destacar uma arte promocional no primeiro bloco do site.
+
+### Quando não usar
+
+Se não houver campanha ativa, o mais adequado é manter a imagem institucional padrão do site.
+
+### Fluxo recomendado de atualização
+
+1. preparar a nova arte final;
+2. salvar como `assets/painel.jpeg`;
+3. revisar o topo em desktop e celular;
+4. validar contraste e legibilidade;
+5. publicar somente após conferência.
+
+Cuidados importantes:
+
+- tratar o painel como peça principal da primeira impressão do site;
+- testar sempre em telas grandes e pequenas;
+- verificar textos incorporados à própria arte;
+- remover campanhas antigas quando deixarem de ser vigentes.
+
+### Comportamento das margens do painel em telas pequenas
+
+A borda branca ao redor da imagem principal é calculada dinamicamente pelo navegador para se ajustar a qualquer tamanho de celular, garantindo que o painel sempre funcione como um quadro. O layout segue 4 regras funcionais estritas:
+
+1. As **4 margens brancas** (superior, inferior, esquerda e direita) estarão sempre visíveis.
+2. A borda mais estreita terá sempre o tamanho exato de **8px**, de modo que a imagem aproveite ao máximo o espaço sem encostar nos limites.
+3. A margem direita será sempre igual à margem esquerda.
+4. A margem superior será sempre igual à margem inferior.
+
+Esse mecanismo garante que imagens com diferentes proporções (mais altas ou mais largas) não sofram cortes e permaneçam perfeitamente emolduradas de forma automática. O conjunto de testes automatizados valida constantemente essas 4 exigências matemáticas a cada alteração.
+
+## 13. Segurança e manutenção
+
+Mesmo sendo um site estático, é importante:
+
+- não publicar senhas, tokens ou credenciais;
+- revisar links externos antes de divulgar;
+- evitar dependências desnecessárias de terceiros;
+- manter o conteúdo oficial sob controle da igreja.
+
+Também é recomendável que pelo menos duas pessoas saibam:
 
 - onde está o repositório;
 - como publicar uma nova versão;
 - como restaurar uma versão anterior.
 
----
-
-## 11. Segurança e cuidados
-
-Mesmo em um site estático, alguns cuidados são importantes:
-
-- não publicar senhas no repositório;
-- não expor chaves, tokens ou credenciais;
-- revisar links externos antes de divulgar;
-- evitar incorporar recursos de terceiros desnecessários;
-- manter o conteúdo oficial sob controle da igreja.
-
-Se houver formulários ou integrações no futuro, será necessário reforçar os cuidados de privacidade e segurança.
-
----
-
-## 12. Responsividade e acessibilidade
-
-O site deve permanecer legível e funcional em:
-
-- celulares;
-- tablets;
-- notebooks;
-- desktops.
-
-Também é recomendado:
-
-- bom contraste entre texto e fundo;
-- tamanhos de fonte confortáveis;
-- botões fáceis de tocar no celular;
-- textos alternativos em imagens importantes, quando aplicável.
-
----
-
-## 13. Evolução futura do projeto
-
-Este site foi pensado para começar de forma estática, mas com base organizada para crescer.
-
-Possíveis próximos passos:
-
-- página própria para programação e agenda;
-- área de ministérios;
-- galeria de fotos;
-- integração com Instagram;
-- formulário de contato;
-- versão futura para a **IACM Rudge Ramos**;
-- empacotamento e publicação futura em infraestrutura conteinerizada mais avançada.
-
-### Ambiente futuro
-
-A preferência arquitetural definida para a evolução do projeto é:
-
-- **desenvolvimento local com Docker Compose no Linux**;
-- **publicação inicial estática em GitHub Pages**;
-- possível **migração futura para Kubernetes** em ambiente de produção, caso o projeto cresça.
-
----
-
-## 14. Conteúdos e referências institucionais
-
-Fontes úteis já conhecidas para o projeto:
-
-- Instagram da IACM Paraíso;
-- Facebook histórico da igreja;
-- materiais visuais institucionais;
-- logo oficial da igreja;
-- foto da fachada/local;
-- referências de design de outras igrejas da Aliança.
-
-Toda reutilização de mídia deve ser revisada com atenção à qualidade visual e adequação institucional.
-
----
-
-## 15. Suporte de manutenção
-
-Em caso de atualização, recomenda-se seguir esta ordem:
-
-1. corrigir informações críticas primeiro;
-2. revisar visual e funcionamento depois;
-3. publicar somente após validação básica;
-4. testar a versão online final.
-
-Se algo quebrar após uma publicação:
+Se uma publicação quebrar o site:
 
 1. voltar ao último commit estável;
 2. republicar a versão anterior;
 3. corrigir o problema localmente;
-4. publicar novamente apenas após novo teste.
+4. publicar novamente somente após novo teste.
 
----
+## 14. Evolução futura
 
-## 16. Resumo operacional rápido
+Possíveis próximos passos do projeto:
 
-Para a maioria das atualizações do dia a dia:
+- página própria para programação e agenda;
+- área de ministérios;
+- galeria de fotos;
+- integração com redes sociais;
+- formulário de contato;
+- expansão futura para outros sites institucionais da igreja.
 
-1. editar textos/imagens;
-2. subir localmente com Docker Compose;
-3. revisar no navegador;
-4. fazer commit;
-5. enviar ao repositório;
-6. validar no GitHub Pages.
-
----
-
-## 17. Licença e uso interno
+## 15. Licença e uso institucional
 
 Salvo definição diferente da igreja, este projeto deve ser tratado como material institucional da **Igreja Aliança Cristã e Missionária do Paraíso**, com uso e manutenção controlados pela equipe responsável.
-
----
-
-## 18. Contato institucional sugerido no site
-
-Sugere-se manter visíveis no site, sempre que disponíveis e validados:
-
-- horário do Culto;
-- endereço completo;
-- mapa/localização;
-- Instagram oficial;
-- canal principal de contato.
-
----
-
-Documento preparado para apoiar a operação do site da **IACM Paraíso** em ambiente de produção.
