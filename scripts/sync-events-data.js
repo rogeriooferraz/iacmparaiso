@@ -2,12 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..');
-const sourcePath = path.join(rootDir, 'events', 'events.json');
 const targetPath = path.join(rootDir, 'assets', 'js', 'events-data.js');
 
-function sanitizeEvents(events) {
+function validateEvents(events) {
   if (!Array.isArray(events)) {
-    throw new Error('events/events.json must contain a JSON array.');
+    throw new Error('assets/js/events-data.js must assign an array to window.EVENTS_DATA.');
   }
 
   return events.map((event, index) => {
@@ -27,22 +26,20 @@ function sanitizeEvents(events) {
 }
 
 function main() {
-  let events = [];
-
-  if (fs.existsSync(sourcePath)) {
-    const source = fs.readFileSync(sourcePath, 'utf8').trim();
-    events = source ? sanitizeEvents(JSON.parse(source)) : [];
+  if (!fs.existsSync(targetPath)) {
+    throw new Error('assets/js/events-data.js was not found.');
   }
 
-  const output = [
-    'window.EVENTS_DATA = Object.freeze(',
-    `${JSON.stringify(events, null, 2)}`,
-    ');',
-    ''
-  ].join('\n');
+  const source = fs.readFileSync(targetPath, 'utf8');
+  const match = source.match(/window\.EVENTS_DATA\s*=\s*Object\.freeze\(([\s\S]*?)\);?\s*$/);
 
-  fs.writeFileSync(targetPath, output, 'utf8');
-  console.log(targetPath);
+  if (!match) {
+    throw new Error('assets/js/events-data.js must export data as window.EVENTS_DATA = Object.freeze([...]);');
+  }
+
+  const events = Function(`"use strict"; return (${match[1]});`)();
+  validateEvents(events);
+  console.log(`${targetPath} OK (${events.length} event${events.length === 1 ? '' : 's'})`);
 }
 
 main();

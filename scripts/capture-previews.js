@@ -11,7 +11,8 @@ const targets = [
     viewport: { width: 1440, height: 1400 },
     captures: [
       { name: 'home', fullPage: false },
-      { name: 'eventos', selector: '.events-section', padding: 12 }
+      { name: 'eventos', selector: '.events-section', padding: 12 },
+      { name: 'contato', selector: '.site-footer', padding: 12 }
     ]
   },
   {
@@ -22,7 +23,8 @@ const targets = [
     hasTouch: true,
     captures: [
       { name: 'home', fullPage: false },
-      { name: 'eventos', selector: '.events-section', padding: 8 }
+      { name: 'eventos', selector: '.events-section', padding: 8 },
+      { name: 'contato', selector: '.site-footer', padding: 8 }
     ]
   },
   {
@@ -33,7 +35,8 @@ const targets = [
     hasTouch: true,
     captures: [
       { name: 'home', fullPage: false },
-      { name: 'eventos', selector: '.events-section', padding: 8 }
+      { name: 'eventos', selector: '.events-section', padding: 8 },
+      { name: 'contato', selector: '.site-footer', padding: 8 }
     ]
   }
 ];
@@ -42,7 +45,7 @@ async function waitForPageReady(page) {
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
   await page.waitForSelector('.hero-media');
   await page.waitForSelector('.hero-nav');
-  await page.waitForSelector('.event-entry');
+  await page.waitForFunction(() => Array.isArray(window.EVENTS_DATA));
   await page.waitForTimeout(1000);
 }
 
@@ -56,9 +59,17 @@ async function capturePage(page, target, capture) {
   }
 
   const locator = page.locator(capture.selector);
-  await locator.scrollIntoViewIfNeeded();
+  if (await locator.count() === 0) {
+    return;
+  }
+
+  if (!(await locator.first().isVisible())) {
+    return;
+  }
+
+  await locator.first().scrollIntoViewIfNeeded();
   await page.waitForTimeout(1000);
-  await locator.screenshot({ path: outputPath });
+  await locator.first().screenshot({ path: outputPath });
   console.log(outputPath);
 }
 
