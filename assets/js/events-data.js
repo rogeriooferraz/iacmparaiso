@@ -1,6 +1,8 @@
 window.EVENTS_DATA = Object.freeze([
   {
-    file: "event1-o-reino-dos-ceus-2026.jpeg",
-    title: "O Reino dos Céus",
+    file: "3-piquenique-cientec-2026.jpeg",
+    title: "Piquenique e Brincadeiras no CIENTEC!",
+    description:
+      "Aproveitem para convidar e levar as crianças (vizinhos, sobrinhos, netos) para brincar; compartilhar tempo juntos, e conhecer outras crianças.",
   },
 ]);

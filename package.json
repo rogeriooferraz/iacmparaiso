@@ -5,7 +5,8 @@
   "main": "assets/js/site.js",
   "scripts": {
     "events:sync": "node scripts/sync-events-data.js",
-    "serve": "python3 -m http.server 4173",
+    "server": "bash scripts/start-local-server.sh",
+    "serve:test": "HOST=127.0.0.1 PORT=4173 bash scripts/start-local-server.sh",
     "playwright:install": "playwright install chromium",
     "screenshots": "node scripts/capture-previews.js",
     "test": "node tests/layout.spec.js"

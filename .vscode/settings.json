@@ -1,0 +1,5 @@
+{
+  "workbench.browser.openLocalhostLinks": true,
+  "livePreview.useIntegratedBrowser": true,
+  "workbench.browser.showInTitleBar": true
+}

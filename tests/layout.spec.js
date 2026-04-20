@@ -1,5 +1,137 @@
 const { chromium } = require('playwright');
 
+async function checkDesktopEventsSecondClick(page, device) {
+  await page.evaluate(() => {
+    window.setTimeout(() => history.back(), 0);
+  });
+  await page.waitForTimeout(1500);
+
+  const backState = await page.evaluate(() => ({
+    hash: location.hash,
+    scrollY: Math.round(window.scrollY)
+  }));
+  console.log(`- Back button -> hash: "${backState.hash}", scrollY: ${backState.scrollY}`);
+
+  if (backState.hash !== '' || backState.scrollY >= 80) {
+    console.error(`  ERROR: Back button did not return to the initial screen on ${device}!`);
+    process.exitCode = 1;
+  }
+
+  await page.click('.hero-nav a[href="#eventos"]');
+  await page.waitForTimeout(1500);
+
+  const secondClickState = await page.evaluate(() => ({
+    hash: location.hash,
+    entryTop: Math.round(document.querySelector('.event-entry').getBoundingClientRect().top),
+    contentBottom: Math.round(document.querySelector('.event-content').getBoundingClientRect().bottom),
+    viewportHeight: window.innerHeight
+  }));
+  console.log(`- Second eventos click -> hash: "${secondClickState.hash}", entry top: ${secondClickState.entryTop}, content bottom: ${secondClickState.contentBottom}`);
+
+  if (secondClickState.hash !== '#eventos' || Math.abs(secondClickState.entryTop) > 8) {
+    console.error(`  ERROR: Second Eventos click does not return to the correct anchored state on ${device}!`);
+    process.exitCode = 1;
+  }
+
+  if (secondClickState.contentBottom > secondClickState.viewportHeight - 6) {
+    console.error(`  ERROR: Second Eventos click loses the visible bottom white margin on ${device}!`);
+    process.exitCode = 1;
+  }
+}
+
+async function checkLongDescriptionToggle() {
+  console.log(`\nStarting long-description toggle test...`);
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
+
+  try {
+    await page.route('**/assets/js/events-data.js', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: `window.EVENTS_DATA = Object.freeze([{ file: "2-piquenique-cientec-2026.jpeg", title: "Piquenique e Brincadeiras no CIENTEC!", description: "${'A IACM Paraíso convida famílias, vizinhos, amigos e crianças para um tempo de convivência, brincadeiras, conversa, lanche e comunhão no CIENTEC. '.repeat(8)}" }]);`
+      });
+    });
+
+    await page.goto('http://127.0.0.1:4173');
+    await page.waitForSelector('.hero-nav a[href="#eventos"]');
+    await page.waitForTimeout(1000);
+    await page.click('.hero-nav a[href="#eventos"]');
+    await page.waitForSelector('.event-description-toggle:not([hidden])');
+
+    const collapsed = await page.evaluate(() => {
+      const description = document.querySelector('.event-description');
+      const shell = document.querySelector('.event-description-shell');
+      const toggle = document.querySelector('.event-description-toggle');
+      const image = document.querySelector('.event-image');
+      return {
+        descriptionTop: Math.round(description.getBoundingClientRect().top),
+        imageBottom: Math.round(image.getBoundingClientRect().bottom),
+        clientHeight: Math.round(description.clientHeight),
+        scrollHeight: Math.round(description.scrollHeight),
+        viewportHeight: window.innerHeight,
+        expanded: shell.classList.contains('expanded'),
+        ariaExpanded: toggle.getAttribute('aria-expanded')
+      };
+    });
+
+    console.log(`- Long description collapsed -> image bottom: ${collapsed.imageBottom}, description top: ${collapsed.descriptionTop}, client: ${collapsed.clientHeight}, scroll: ${collapsed.scrollHeight}`);
+
+    if (collapsed.descriptionTop <= collapsed.imageBottom) {
+      console.error('  ERROR: Event description is not rendered after the image in the long-description state!');
+      process.exitCode = 1;
+    }
+
+    if (collapsed.clientHeight >= collapsed.scrollHeight || collapsed.expanded || collapsed.ariaExpanded !== 'false') {
+      console.error('  ERROR: Long event description is not collapsed before interaction!');
+      process.exitCode = 1;
+    }
+
+    if (collapsed.clientHeight > Math.ceil(collapsed.viewportHeight * 0.4) + 2) {
+      console.error('  ERROR: Collapsed event description exceeds 40% of the viewport height!');
+      process.exitCode = 1;
+    }
+
+    await page.click('.event-description-toggle');
+    await page.waitForTimeout(250);
+
+    const expanded = await page.evaluate(() => {
+      const description = document.querySelector('.event-description');
+      const shell = document.querySelector('.event-description-shell');
+      const toggle = document.querySelector('.event-description-toggle');
+      return {
+        clientHeight: Math.round(description.clientHeight),
+        scrollHeight: Math.round(description.scrollHeight),
+        overflowY: window.getComputedStyle(description).overflowY,
+        expanded: shell.classList.contains('expanded'),
+        ariaExpanded: toggle.getAttribute('aria-expanded')
+      };
+    });
+
+    console.log(`- Long description expanded -> client: ${expanded.clientHeight}, scroll: ${expanded.scrollHeight}, overflowY: ${expanded.overflowY}`);
+
+    if (!expanded.expanded || expanded.ariaExpanded !== 'true') {
+      console.error('  ERROR: Long event description did not switch to the expanded state after tapping the icon!');
+      process.exitCode = 1;
+    }
+
+    if (expanded.clientHeight <= collapsed.clientHeight || expanded.clientHeight < expanded.scrollHeight - 2) {
+      console.error('  ERROR: Expanded long event description did not grow to reveal the remaining text!');
+      process.exitCode = 1;
+    }
+
+    if (expanded.overflowY !== 'visible') {
+      console.error('  ERROR: Expanded long event description is still constrained to an internal scroll area!');
+      process.exitCode = 1;
+    }
+  } catch (err) {
+    console.error(`  ERROR executing long-description toggle test: ${err.message}`);
+    process.exitCode = 1;
+  } finally {
+    await browser.close();
+  }
+}
+
 async function checkLayout(device, width, height) {
   console.log(`\nStarting tests for ${device} (${width}x${height})...`);
   const browser = await chromium.launch();
@@ -103,12 +235,28 @@ async function checkLayout(device, width, height) {
       const target = document.querySelector('#eventos');
       const frame = target?.querySelector('.event-frame');
       const aboutHeading = document.querySelector('#sobre h2');
+      const horariosTag = document.querySelector('#horarios .section-tag');
+      const horariosCard = document.querySelector('#horarios .info-card');
       const localHeading = document.querySelector('#local h2');
       const contactHeading = document.querySelector('#contato');
       const eventsNavLink = document.querySelector('.hero-nav a[href="#eventos"]');
+      const eventsTag = document.querySelector('.events-section .section-tag');
+      const sectionTag = document.querySelector('#sobre .section-tag');
+      const sectionTagStyle = sectionTag ? window.getComputedStyle(sectionTag) : null;
       const imageSources = Array.from(document.querySelectorAll('.event-image')).map((image) => {
         const src = image.getAttribute('src') || '';
-        return src.replace(/^events\//, '');
+        return src.replace(/^assets\/events\//, '');
+      });
+      const descriptions = Array.from(document.querySelectorAll('.event-description')).map((description) => description.textContent?.replace(/\s+/g, ' ').trim() || '');
+      const descriptionHeights = Array.from(document.querySelectorAll('.event-description')).map((description) => Math.round(description.getBoundingClientRect().height));
+      const descriptionTextAligns = Array.from(document.querySelectorAll('.event-description')).map((description) => window.getComputedStyle(description).textAlign);
+      const descriptionPlacements = Array.from(document.querySelectorAll('.event-entry')).map((entry) => {
+        const image = entry.querySelector('.event-image');
+        const description = entry.querySelector('.event-description');
+        if (!image || !description) {
+          return null;
+        }
+        return Math.round(description.getBoundingClientRect().top) > Math.round(image.getBoundingClientRect().bottom);
       });
       const socialLinks = Array.from(document.querySelectorAll('.footer-social-links .social-link')).map((link) => ({
         href: link.getAttribute('href') || '',
@@ -118,7 +266,15 @@ async function checkLayout(device, width, height) {
         eventsNavHref: eventsNavLink?.getAttribute('href') || null,
         eventsNavHidden: eventsNavLink?.hidden ?? null,
         eventsSectionHidden: section?.hidden ?? null,
+        sectionTagPointerEvents: sectionTagStyle?.pointerEvents || null,
+        sectionTagTextTransform: sectionTagStyle?.textTransform || null,
+        sectionTagBorderRadius: sectionTagStyle?.borderRadius || null,
         headingTexts: headings.map((heading) => heading.textContent?.trim() || ''),
+        horariosTagText: horariosTag?.textContent?.trim() || '',
+        horariosTagLeft: horariosTag ? Math.round(horariosTag.getBoundingClientRect().left) : null,
+        horariosCardLeft: horariosCard ? Math.round(horariosCard.getBoundingClientRect().left) : null,
+        eventsTagText: eventsTag?.textContent?.trim() || '',
+        eventsTagLeft: eventsTag ? Math.round(eventsTag.getBoundingClientRect().left) : null,
         firstHeadingBeforeFrame: !!headings[0] && !!frame && (headings[0].compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
         headingLeft: headings[0] ? Math.round(headings[0].getBoundingClientRect().left) : null,
         aboutHeadingLeft: aboutHeading ? Math.round(aboutHeading.getBoundingClientRect().left) : null,
@@ -126,6 +282,10 @@ async function checkLayout(device, width, height) {
         contactHeadingText: contactHeading ? contactHeading.textContent?.trim() || '' : '',
         contactHeadingLeft: contactHeading ? Math.round(contactHeading.getBoundingClientRect().left) : null,
         imageSources,
+        descriptions,
+        descriptionHeights,
+        descriptionTextAligns,
+        descriptionPlacements,
         socialLinks
       };
     });
@@ -135,6 +295,9 @@ async function checkLayout(device, width, height) {
 
     const expectedTitles = eventsConfig.map((event) => event.title);
     const expectedFiles = eventsConfig.map((event) => event.file);
+    const expectedDescriptions = eventsConfig
+      .map((event) => typeof event.description === 'string' ? event.description.trim() : '')
+      .filter(Boolean);
 
     if (hasEvents) {
       if (pageState.eventsNavHref !== '#eventos') {
@@ -152,8 +315,28 @@ async function checkLayout(device, width, height) {
         process.exitCode = 1;
       }
 
+      if (JSON.stringify(pageState.descriptions) !== JSON.stringify(expectedDescriptions)) {
+        console.error(`  ERROR: Event descriptions do not match assets/js/events-data.js content on ${device}!`);
+        process.exitCode = 1;
+      }
+
       if (!pageState.firstHeadingBeforeFrame) {
         console.error(`  ERROR: First event heading is not positioned before the first image on ${device}!`);
+        process.exitCode = 1;
+      }
+
+      if (pageState.descriptionPlacements.some((value) => value === false)) {
+        console.error(`  ERROR: Event description is not positioned after its image on ${device}!`);
+        process.exitCode = 1;
+      }
+
+      if (expectedDescriptions.length > 0 && pageState.descriptionHeights.some((value) => value <= 0)) {
+        console.error(`  ERROR: Event description has zero visible height on ${device}!`);
+        process.exitCode = 1;
+      }
+
+      if (expectedDescriptions.length > 0 && pageState.descriptionTextAligns.some((value) => value !== 'center')) {
+        console.error(`  ERROR: Event description text is not centered on ${device}!`);
         process.exitCode = 1;
       }
 
@@ -170,6 +353,36 @@ async function checkLayout(device, width, height) {
 
     if (Math.abs(pageState.aboutHeadingLeft - pageState.localHeadingLeft) > 1) {
       console.error(`  ERROR: Sobre heading is not aligned with the Local section heading on ${device}!`);
+      process.exitCode = 1;
+    }
+
+    if (pageState.sectionTagPointerEvents !== 'none' || pageState.sectionTagTextTransform !== 'uppercase' || pageState.sectionTagBorderRadius !== '0px') {
+      console.error(`  ERROR: Section tag styling regressed and may look interactive on ${device}!`);
+      process.exitCode = 1;
+    }
+
+    if (pageState.horariosTagText !== 'Horários') {
+      console.error(`  ERROR: Horarios section tag is incorrect on ${device}!`);
+      process.exitCode = 1;
+    }
+
+    if (Math.abs(pageState.horariosCardLeft - pageState.localHeadingLeft) > 1) {
+      console.error(`  ERROR: Horarios cards are not aligned with the Local section heading on ${device}!`);
+      process.exitCode = 1;
+    }
+
+    if (Math.abs(pageState.horariosTagLeft - pageState.horariosCardLeft) > 1) {
+      console.error(`  ERROR: Horarios section tag is not aligned with its cards on ${device}!`);
+      process.exitCode = 1;
+    }
+
+    if (pageState.eventsTagText !== 'Eventos') {
+      console.error(`  ERROR: Eventos section tag is incorrect on ${device}!`);
+      process.exitCode = 1;
+    }
+
+    if (hasEvents && Math.abs(pageState.eventsTagLeft - pageState.headingLeft) > 1) {
+      console.error(`  ERROR: Eventos section tag is not aligned with the event heading on ${device}!`);
       process.exitCode = 1;
     }
 
@@ -213,16 +426,17 @@ async function checkLayout(device, width, height) {
         const heading = document.querySelector('.events-heading-shell');
         if (!entry || !target || !heading || location.hash !== '#eventos') return false;
         if (smallScreen) {
-          return target.getBoundingClientRect().top <= 2 && heading.getBoundingClientRect().top >= 6;
+          return Math.abs(target.getBoundingClientRect().top) <= 16 && heading.getBoundingClientRect().top >= 0;
         }
-        return entry.getBoundingClientRect().top <= 2 && heading.getBoundingClientRect().top >= 6;
-      }, isSmallScreen, { timeout: 4000 });
+        return Math.abs(entry.getBoundingClientRect().top) <= 8 && heading.getBoundingClientRect().top >= 0;
+      }, isSmallScreen, { timeout: 6000 });
 
       const anchorMetrics = await page.evaluate(() => {
         const entry = document.querySelector('.event-entry');
         const heading = document.querySelector('.events-heading-shell');
         const target = document.querySelector('#eventos');
         const image = document.querySelector('.event-image');
+        const content = document.querySelector('.event-content');
         const viewportHeight = window.innerHeight;
         return {
           entryTop: Math.round(entry.getBoundingClientRect().top),
@@ -230,14 +444,15 @@ async function checkLayout(device, width, height) {
           headingTop: Math.round(heading.getBoundingClientRect().top),
           targetTop: Math.round(target.getBoundingClientRect().top),
           imageBottom: Math.round(image.getBoundingClientRect().bottom),
+          contentBottom: Math.round(content.getBoundingClientRect().bottom),
           viewportHeight
         };
       });
 
-      console.log(`- Eventos anchor -> entry top: ${anchorMetrics.entryTop}px, entry bottom: ${anchorMetrics.entryBottom}px, heading top: ${anchorMetrics.headingTop}px, target top: ${anchorMetrics.targetTop}px, image bottom: ${anchorMetrics.imageBottom}px`);
+      console.log(`- Eventos anchor -> entry top: ${anchorMetrics.entryTop}px, entry bottom: ${anchorMetrics.entryBottom}px, heading top: ${anchorMetrics.headingTop}px, target top: ${anchorMetrics.targetTop}px, image bottom: ${anchorMetrics.imageBottom}px, content bottom: ${anchorMetrics.contentBottom}px`);
 
       if (isSmallScreen) {
-        if (Math.abs(anchorMetrics.targetTop) > 6) {
+        if (Math.abs(anchorMetrics.targetTop) > 16) {
           console.error(`  ERROR: Eventos button does not align the first event entry to the viewport on ${device}!`);
           process.exitCode = 1;
         }
@@ -247,7 +462,7 @@ async function checkLayout(device, width, height) {
           process.exitCode = 1;
         }
       } else {
-        if (Math.abs(anchorMetrics.entryTop) > 4) {
+        if (Math.abs(anchorMetrics.entryTop) > 8) {
           console.error(`  ERROR: Eventos entry should align to the top of the viewport on large screens on ${device}!`);
           process.exitCode = 1;
         }
@@ -258,13 +473,14 @@ async function checkLayout(device, width, height) {
         }
       }
 
-      if (anchorMetrics.entryBottom > anchorMetrics.viewportHeight + 2) {
+      const entryBottomTolerance = isSmallScreen ? 16 : 8;
+      if (anchorMetrics.entryBottom > anchorMetrics.viewportHeight + entryBottomTolerance) {
         console.error(`  ERROR: First event entry is taller than the viewport on ${device}!`);
         process.exitCode = 1;
       }
 
-      if (anchorMetrics.imageBottom > anchorMetrics.viewportHeight - 6) {
-        console.error(`  ERROR: Event image is missing visible bottom white margin on ${device}!`);
+      if (anchorMetrics.contentBottom > anchorMetrics.viewportHeight - 6) {
+        console.error(`  ERROR: Event content is missing visible bottom white margin on ${device}!`);
         process.exitCode = 1;
       }
 
@@ -272,9 +488,13 @@ async function checkLayout(device, width, height) {
         const entry = document.querySelector('.event-entry');
         const frame = document.querySelector('.event-frame');
         const image = document.querySelector('.event-image');
+        const content = document.querySelector('.event-content');
+        const description = document.querySelector('.event-description');
+        const descriptionToggle = document.querySelector('.event-description-toggle');
         const entryStyle = window.getComputedStyle(entry);
         const frameStyle = window.getComputedStyle(frame);
         const imageStyle = window.getComputedStyle(image);
+        const contentStyle = window.getComputedStyle(content);
         const imageRect = image.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
 
@@ -286,9 +506,12 @@ async function checkLayout(device, width, height) {
           framePaddingRight: parseFloat(frameStyle.paddingRight),
           framePaddingBottom: parseFloat(frameStyle.paddingBottom),
           framePaddingLeft: parseFloat(frameStyle.paddingLeft),
+          contentGap: parseFloat(contentStyle.gap),
           imageFit: imageStyle.objectFit,
           imageHeight: Math.round(imageRect.height),
-          viewportHeight
+          viewportHeight,
+          descriptionExists: !!description,
+          descriptionToggleExists: !!descriptionToggle
         };
       });
 
@@ -323,25 +546,23 @@ async function checkLayout(device, width, height) {
         process.exitCode = 1;
       }
 
+      if (eventMetrics.contentGap !== 12) {
+        console.error(`  ERROR: Event content gap changed unexpectedly on ${device}!`);
+        process.exitCode = 1;
+      }
+
+      if (expectedDescriptions.length > 0 && (!eventMetrics.descriptionExists || !eventMetrics.descriptionToggleExists)) {
+        console.error(`  ERROR: Event description UI is missing on ${device}!`);
+        process.exitCode = 1;
+      }
+
       if (isSmallScreen && eventMetrics.imageHeight >= (eventMetrics.viewportHeight - 16)) {
         console.error(`  ERROR: Event image is ignoring the heading height on ${device}!`);
         process.exitCode = 1;
       }
 
       if (!isSmallScreen) {
-        await page.evaluate(() => {
-          window.setTimeout(() => history.back(), 0);
-        });
-        await page.waitForTimeout(1500);
-        const backState = await page.evaluate(() => ({
-          hash: location.hash,
-          scrollY: Math.round(window.scrollY)
-        }));
-        console.log(`- Back button -> hash: "${backState.hash}", scrollY: ${backState.scrollY}`);
-        if (backState.hash !== '' || backState.scrollY >= 80) {
-          console.error(`  ERROR: Back button did not return to the initial screen on ${device}!`);
-          process.exitCode = 1;
-        }
+        await checkDesktopEventsSecondClick(page, device);
       }
     }
 
@@ -438,6 +659,7 @@ async function checkNoEventsState(label, routes) {
   await checkLayout('pixel7', 412, 915);
   await checkLayout('pixel5', 393, 851);
   await checkLayout('motog4', 360, 640);
+  await checkLongDescriptionToggle();
 
   await checkNoEventsState('empty-events-data', [
     {

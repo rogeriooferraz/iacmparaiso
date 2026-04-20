@@ -11,6 +11,8 @@ const targets = [
     viewport: { width: 1440, height: 1400 },
     captures: [
       { name: 'home', fullPage: false },
+      { name: 'sobre', selector: '#sobre', padding: 12 },
+      { name: 'horarios', selector: '#horarios', padding: 12 },
       { name: 'eventos', selector: '.events-section', padding: 12 },
       { name: 'contato', selector: '.site-footer', padding: 12 }
     ]
@@ -23,6 +25,8 @@ const targets = [
     hasTouch: true,
     captures: [
       { name: 'home', fullPage: false },
+      { name: 'sobre', selector: '#sobre', padding: 8 },
+      { name: 'horarios', selector: '#horarios', padding: 8 },
       { name: 'eventos', selector: '.events-section', padding: 8 },
       { name: 'contato', selector: '.site-footer', padding: 8 }
     ]
@@ -35,6 +39,8 @@ const targets = [
     hasTouch: true,
     captures: [
       { name: 'home', fullPage: false },
+      { name: 'sobre', selector: '#sobre', padding: 8 },
+      { name: 'horarios', selector: '#horarios', padding: 8 },
       { name: 'eventos', selector: '.events-section', padding: 8 },
       { name: 'contato', selector: '.site-footer', padding: 8 }
     ]

@@ -21,6 +21,11 @@ if (menuToggle && mainNav) {
 }
 
 const eventsNavLink = document.querySelector('.hero-nav a[href="#eventos"]');
+let descriptionSyncFrame = 0;
+
+function syncEventViewportVars() {
+  document.documentElement.style.setProperty('--event-description-collapsed-max', `${Math.round(window.innerHeight * 0.4)}px`);
+}
 
 if (eventsNavLink) {
   eventsNavLink.addEventListener('click', (event) => {
@@ -29,13 +34,21 @@ if (eventsNavLink) {
 
     event.preventDefault();
     desktopEventsReturnY = window.scrollY;
+    if (eventsSection) {
+      eventsSection.classList.add('visible');
+      eventsSection.style.transition = 'none';
+      eventsSection.style.opacity = '1';
+      eventsSection.style.transform = 'translateY(0)';
+    }
     if (window.location.hash !== '#eventos') {
       history.pushState(null, '', '#eventos');
     }
-    const targetTop = firstEventEntry.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({
-      top: Math.max(0, targetTop - 24),
-      behavior: 'smooth'
+    requestAnimationFrame(() => {
+      const targetTop = firstEventEntry.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth'
+      });
     });
   });
 }
@@ -53,9 +66,65 @@ function sanitizeEvents(events) {
     .filter((event) => event && typeof event.file === 'string' && typeof event.title === 'string')
     .map((event) => ({
       file: event.file.trim(),
-      title: event.title.trim()
+      title: event.title.trim(),
+      description: typeof event.description === 'string' ? event.description.trim() : ''
     }))
     .filter((event) => event.file && event.title);
+}
+
+function setDescriptionExpanded(shell, expanded) {
+  if (!shell) return;
+
+  const toggle = shell.querySelector('.event-description-toggle');
+  shell.classList.toggle('expanded', expanded);
+
+  if (toggle) {
+    const label = expanded ? 'Ocultar descrição completa do evento' : 'Mostrar descrição completa do evento';
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.setAttribute('aria-label', label);
+    toggle.title = label;
+  }
+}
+
+function syncDescriptionToggle(shell) {
+  if (!shell) return;
+
+  const description = shell.querySelector('.event-description');
+  const toggle = shell.querySelector('.event-description-toggle');
+  if (!description || !toggle) return;
+
+  const shouldRestoreExpanded = shell.classList.contains('expanded');
+  shell.classList.remove('expanded');
+
+  const hasOverflow = (description.scrollHeight - description.clientHeight) > 1;
+  shell.dataset.overflow = String(hasOverflow);
+  toggle.hidden = !hasOverflow;
+  toggle.disabled = !hasOverflow;
+
+  if (!hasOverflow) {
+    setDescriptionExpanded(shell, false);
+    return;
+  }
+
+  setDescriptionExpanded(shell, shouldRestoreExpanded);
+}
+
+function syncAllDescriptionToggles() {
+  document.querySelectorAll('.event-description-shell').forEach((shell) => {
+    syncDescriptionToggle(shell);
+  });
+}
+
+function queueDescriptionSync() {
+  if (descriptionSyncFrame) {
+    cancelAnimationFrame(descriptionSyncFrame);
+  }
+
+  descriptionSyncFrame = requestAnimationFrame(() => {
+    descriptionSyncFrame = 0;
+    syncEventViewportVars();
+    syncAllDescriptionToggles();
+  });
 }
 
 function updateEventsVisibility() {
@@ -103,16 +172,60 @@ function buildEventEntry(event, index) {
   const frame = document.createElement('div');
   frame.className = 'event-frame';
 
+  const content = document.createElement('div');
+  content.className = 'event-content';
+
+  const visual = document.createElement('div');
+  visual.className = 'event-visual';
+
   const image = document.createElement('img');
   image.className = 'event-image';
-  image.src = `events/${event.file}`;
+  image.src = `assets/events/${event.file}`;
   image.alt = `Cartaz do evento ${event.title}`;
+  image.addEventListener('load', queueDescriptionSync, { once: true });
   image.addEventListener('error', () => {
     console.warn(`Event image not found: ${image.src}`);
     removeEventEntry(entry);
   }, { once: true });
 
-  frame.appendChild(image);
+  visual.appendChild(image);
+  content.appendChild(visual);
+
+  if (event.description) {
+    const descriptionShell = document.createElement('div');
+    descriptionShell.className = 'event-description-shell';
+
+    const description = document.createElement('p');
+    description.className = 'event-description';
+    description.textContent = event.description;
+
+    const actions = document.createElement('div');
+    actions.className = 'event-description-actions';
+
+    const toggle = document.createElement('button');
+    toggle.className = 'event-description-toggle';
+    toggle.type = 'button';
+    toggle.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Mostrar descrição completa do evento');
+    toggle.title = 'Mostrar descrição completa do evento';
+    toggle.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6.47 8.97a.75.75 0 0 1 1.06 0L12 13.44l4.47-4.47a.75.75 0 1 1 1.06 1.06l-5 5a.75.75 0 0 1-1.06 0l-5-5a.75.75 0 0 1 0-1.06Z"></path>
+      </svg>
+      <span class="sr-only">Expandir descrição</span>
+    `;
+    toggle.addEventListener('click', () => {
+      setDescriptionExpanded(descriptionShell, !descriptionShell.classList.contains('expanded'));
+      queueDescriptionSync();
+    });
+
+    actions.appendChild(toggle);
+    descriptionShell.append(description, actions);
+    content.appendChild(descriptionShell);
+  }
+
+  frame.appendChild(content);
   card.appendChild(frame);
   grid.appendChild(card);
   entry.append(headingShell, grid);
@@ -130,6 +243,7 @@ function renderEvents(events) {
   });
 
   updateEventsVisibility();
+  queueDescriptionSync();
   document.dispatchEvent(new CustomEvent('events:loaded'));
 }
 
@@ -175,3 +289,6 @@ floatingCards.forEach((card) => {
 });
 
 loadEvents();
+
+syncEventViewportVars();
+window.addEventListener('resize', queueDescriptionSync, { passive: true });

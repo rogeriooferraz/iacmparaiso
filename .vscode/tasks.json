@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "serve:manual",
+      "type": "shell",
+      "command": "REUSE_EXISTING=1 npm run server",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "manual-server",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 1,
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting local server for manual testing",
+          "endsPattern": "Serving HTTP on"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": false
+      }
+    }
+  ]
+}
