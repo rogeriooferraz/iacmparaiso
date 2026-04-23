@@ -1,5 +1,14 @@
 const { chromium } = require('playwright');
 
+function normalizeEventDescriptionMarkup(description) {
+  return String(description || '')
+    .replace(/<br\s*\/?>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 async function checkDesktopEventsSecondClick(page, device) {
   await page.evaluate(() => {
     window.setTimeout(() => history.back(), 0);
@@ -49,7 +58,7 @@ async function checkLongDescriptionToggle() {
       await route.fulfill({
         status: 200,
         contentType: 'application/javascript',
-        body: `window.EVENTS_DATA = Object.freeze([{ file: "2-piquenique-cientec-2026.jpeg", title: "Piquenique e Brincadeiras no CIENTEC!", description: "${'A IACM Paraíso convida famílias, vizinhos, amigos e crianças para um tempo de convivência, brincadeiras, conversa, lanche e comunhão no CIENTEC. '.repeat(8)}" }]);`
+        body: `window.EVENTS_DATA = Object.freeze([{ file: "3-piquenique-cientec-2026.jpeg", title: "Piquenique e Brincadeiras no CIENTEC!", description: "${'A IACM Paraíso convida famílias, vizinhos, amigos e crianças para um tempo de convivência, brincadeiras, conversa, lanche e comunhão no CIENTEC. '.repeat(8)}" }]);`
       });
     });
 
@@ -126,6 +135,70 @@ async function checkLongDescriptionToggle() {
     }
   } catch (err) {
     console.error(`  ERROR executing long-description toggle test: ${err.message}`);
+    process.exitCode = 1;
+  } finally {
+    await browser.close();
+  }
+}
+
+async function checkDescriptionHtmlRendering() {
+  console.log(`\nStarting description HTML rendering test...`);
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
+
+  try {
+    await page.route('**/assets/js/events-data.js', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: `window.EVENTS_DATA = Object.freeze([{ file: "3-piquenique-cientec-2026.jpeg", title: "Piquenique e Brincadeiras no CIENTEC!", description: "Linha inicial<br><strong>Local de encontro:</strong> Entrada do Parque CIENTEC às 9:00<br><a href=\\"https://maps.app.goo.gl/bCqDB2y4poRDVUit5\\" target=\\"_blank\\">Clique aqui para ver o mapa</a>" }]);`
+      });
+    });
+
+    await page.goto('http://127.0.0.1:4173');
+    await page.waitForSelector('.hero-nav a[href="#eventos"]');
+    await page.waitForTimeout(1000);
+    await page.click('.hero-nav a[href="#eventos"]');
+    await page.waitForSelector('.event-description strong');
+    await page.waitForSelector('.event-description a');
+
+    const state = await page.evaluate(() => {
+      const description = document.querySelector('.event-description');
+      const strong = description?.querySelector('strong');
+      const link = description?.querySelector('a');
+      return {
+        html: description?.innerHTML || '',
+        text: description?.textContent?.replace(/\s+/g, ' ').trim() || '',
+        strongText: strong?.textContent?.trim() || '',
+        linkText: link?.textContent?.trim() || '',
+        linkHref: link?.getAttribute('href') || '',
+        linkTarget: link?.getAttribute('target') || ''
+      };
+    });
+
+    console.log(`- Description HTML -> strong: "${state.strongText}", link: "${state.linkText}", href: "${state.linkHref}"`);
+
+    if (!state.html.includes('<strong>') || !state.html.includes('<a ')) {
+      console.error('  ERROR: Event description HTML is not being rendered as markup!');
+      process.exitCode = 1;
+    }
+
+    if (state.strongText !== 'Local de encontro:') {
+      console.error('  ERROR: Event description strong label did not render correctly!');
+      process.exitCode = 1;
+    }
+
+    if (state.linkText !== 'Clique aqui para ver o mapa' || state.linkHref !== 'https://maps.app.goo.gl/bCqDB2y4poRDVUit5' || state.linkTarget !== '_blank') {
+      console.error('  ERROR: Event description link did not render correctly!');
+      process.exitCode = 1;
+    }
+
+    if (!state.text.includes('Linha inicial') || !state.text.includes('Local de encontro:') || !state.text.includes('Clique aqui para ver o mapa')) {
+      console.error('  ERROR: Event description rendered text content is incomplete!');
+      process.exitCode = 1;
+    }
+  } catch (err) {
+    console.error(`  ERROR executing description HTML rendering test: ${err.message}`);
     process.exitCode = 1;
   } finally {
     await browser.close();
@@ -296,7 +369,7 @@ async function checkLayout(device, width, height) {
     const expectedTitles = eventsConfig.map((event) => event.title);
     const expectedFiles = eventsConfig.map((event) => event.file);
     const expectedDescriptions = eventsConfig
-      .map((event) => typeof event.description === 'string' ? event.description.trim() : '')
+      .map((event) => typeof event.description === 'string' ? normalizeEventDescriptionMarkup(event.description) : '')
       .filter(Boolean);
 
     if (hasEvents) {
@@ -660,6 +733,7 @@ async function checkNoEventsState(label, routes) {
   await checkLayout('pixel5', 393, 851);
   await checkLayout('motog4', 360, 640);
   await checkLongDescriptionToggle();
+  await checkDescriptionHtmlRendering();
 
   await checkNoEventsState('empty-events-data', [
     {

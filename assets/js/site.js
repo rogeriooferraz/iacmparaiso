@@ -197,7 +197,7 @@ function buildEventEntry(event, index) {
 
     const description = document.createElement('p');
     description.className = 'event-description';
-    description.textContent = event.description;
+    description.innerHTML = event.description;
 
     const actions = document.createElement('div');
     actions.className = 'event-description-actions';
