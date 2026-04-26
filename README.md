@@ -155,7 +155,7 @@ Arquivos relacionados:
 Os testes automatizados e a captura de screenshots usam uma porta separada para evitar conflito com a navegação manual:
 
 ```bash
-npm run serve:test
+npm run server:test
 ```
 
 Esse comando publica o mesmo site em:
@@ -208,7 +208,7 @@ Observações:
 
 ```bash
 npm run server
-npm run serve:test
+npm run server:test
 npm run playwright:install
 npm test
 npm run screenshots

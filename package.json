@@ -6,7 +6,7 @@
   "scripts": {
     "events:sync": "node scripts/sync-events-data.js",
     "server": "bash scripts/start-local-server.sh",
-    "serve:test": "HOST=127.0.0.1 PORT=4173 bash scripts/start-local-server.sh",
+    "server:test": "HOST=127.0.0.1 PORT=4173 bash scripts/start-local-server.sh",
     "playwright:install": "playwright install chromium",
     "screenshots": "node scripts/capture-previews.js",
     "test": "node tests/layout.spec.js"

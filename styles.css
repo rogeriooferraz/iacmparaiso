@@ -33,6 +33,7 @@ body {
 }
 img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
+[hidden] { display: none !important; }
 .container { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
 
 .bg-orb {

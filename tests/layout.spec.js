@@ -708,14 +708,16 @@ async function checkNoEventsState(label, routes) {
       const section = document.querySelector('.events-section');
       return {
         navHidden: !!navLink && navLink.hidden,
+        navDisplay: navLink ? window.getComputedStyle(navLink).display : null,
         sectionHidden: !!section && section.hidden,
+        sectionDisplay: section ? window.getComputedStyle(section).display : null,
         eventsRendered: document.querySelectorAll('.event-entry').length
       };
     });
 
     console.log(`- No-events state -> nav hidden: ${state.navHidden}, section hidden: ${state.sectionHidden}, entries: ${state.eventsRendered}`);
 
-    if (!state.navHidden || !state.sectionHidden || state.eventsRendered !== 0) {
+    if (!state.navHidden || state.navDisplay !== 'none' || !state.sectionHidden || state.sectionDisplay !== 'none' || state.eventsRendered !== 0) {
       console.error(`  ERROR: No-events state failed for ${label}!`);
       process.exitCode = 1;
     }
